@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark" ng-app="main">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="./lib/angular.min.js"></script>
+    <script src="./lib/chart.min.js"></script>
+    <script src="./lib/jstat.min.js"></script>
+    <script src="./lib/jquery.min.js"></script>
+    <script src="./lib/bootstrap.bundle.min.js"></script>
+    <script src="./main.js"></script>
+    <link rel="stylesheet" href="./styles/bootstrap.min.css" />
+    <link rel="stylesheet" href="./styles/style.css" />
+    <title>Document</title>
+</head>
+
+<body>
+    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions"
+        aria-controls="staticBackdrop">
+        Toggle static offcanvas
+    </button>
+    <div class="offcanvas offcanvas-end show text-bg-dark" data-bs-backdrop="static"  tabindex="-1" id="offcanvasWithBothOptions"
+        aria-labelledby="offcanvasWithBothOptionsLabel">
+        <div class="offcanvas-header">
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <h3 class="offcanvas-title mb-3" id="offcanvasWithBothOptionsLabel">
+                Select Datasets
+            </h3>
+            <div ng-controller="moviesController">
+                <h6 class="mb-3 fw-light">
+                    Selected {{selected.length}}/{{maxSelection}}
+                </h6>
+                <div class="accordion" id="accordionExample">
+                    <div class="accordion-item" ng-repeat="(lang, stats) in avgMap | fromMap">
+                        <h2 class="accordion-header">
+                            <input class="form-check-input" type="checkbox" ng-click="handleSelect($event)"
+                                name="{{lang}}" id="#{{lang}}" value="{{lang}}" />
+                            <button class="accordion-button" ng-class="{collapsed: lang !== 'English'}" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#{{lang}}"
+                                aria-expanded="{{lang === 'English'}}" aria-controls="{{lang}}">
+                                <h5>
+                                    <span><i class="bi bi-database"></i></span>
+                                    <span> {{lang}} Movies </span>
+                                </h5>
+                            </button>
+                        </h2>
+                        <div id="{{lang}}" class="accordion-collapse collapse"
+                            ng-class="{show: lang === 'English', collapsed: lang !== 'English'}">
+                            <div class="accordion-body card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-layers-half"></i> Stats
+                                </h5>
+                                <ul class="stats">
+                                    <li><span>Budget</span><span> {{stats[0]}}</span></li>
+                                    <li><span>Revenue</span><span> {{stats[1]}}</span></li>
+                                    <li><span>Rating</span><span> {{stats[2]}}</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

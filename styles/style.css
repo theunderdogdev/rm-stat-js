@@ -1,0 +1,82 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;1,100;1,200;1,300;1,400;1,500;1,600&display=swap");
+@import url("./bootstrap-icons.css");
+* {
+  margin: 0px;
+  padding: 0px;
+  box-sizing: border-box;
+  font-family: "JetBrains Mono";
+}
+#app {
+  width: 100%;
+}
+
+#app.row .card {
+  cursor: pointer;
+}
+.stats {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  list-style-type: none;
+  padding-left: 25px;
+}
+.stats::before {
+  content: "";
+  width: 1px;
+  height: calc(100% - 17px);
+  background-color: #94a3b8;
+  position: absolute;
+  left: 5px;
+}
+.stats li {
+  width: fit-content;
+  position: relative;
+}
+.stats li::before {
+  content: "";
+  width: 1.25rem;
+  height: 1px;
+  background-color: #94a3b8;
+  position: absolute;
+  left: 0px;
+  top: 50%;
+  transform: translate(-100%, -50%);
+}
+
+.stats li > span {
+  padding: 5px;
+  width: fit-content;
+}
+.stats li > span:first-child {
+  display: inline-block;
+}
+.accordion-header {
+  position: relative;
+}
+.accordion-header .accordion-button {
+  padding-left: 2.7rem;
+}
+.accordion .form-check-input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0px;
+  position: absolute;
+  z-index: 3;
+  border-radius: 0.25rem;
+  top: 50%;
+  left: 0.7rem;
+  transform: translate(0rem, -50%);
+}
+
+.accordion h5 {
+  margin-top: 0rem;
+  margin-bottom: 0rem;
+}
+.offcanvas .accordion-button {
+  align-items: center;
+  gap: 0.75rem;
+  z-index: 1;
+}
+.accordion-item:has(input:checked){
+  border: 1px solid #2563eb;
+}

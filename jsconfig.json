@@ -1,0 +1,8 @@
+{
+  "typeAcquisition": {
+    "include": ["jquery", "angularjs"]
+  },
+  "compilerOptions": {
+    "target": "esnext"
+  }
+}
