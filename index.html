@@ -16,12 +16,12 @@
 </head>
 
 <body>
-    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions"
+    <button class="btn btn-outline-primary rounded-circle" id="nav-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions"
         aria-controls="staticBackdrop">
-        Toggle static offcanvas
+        <i class="bi bi-layout-wtf"></i>
     </button>
-    <div class="offcanvas offcanvas-end show text-bg-dark" data-bs-backdrop="static"  tabindex="-1" id="offcanvasWithBothOptions"
-        aria-labelledby="offcanvasWithBothOptionsLabel">
+    <div class="offcanvas offcanvas-end show text-bg-dark" data-bs-backdrop="static" tabindex="-1"
+        id="offcanvasWithBothOptions" aria-labelledby="offcanvasWithBothOptionsLabel">
         <div class="offcanvas-header">
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
@@ -38,9 +38,9 @@
                         <h2 class="accordion-header">
                             <input class="form-check-input" type="checkbox" ng-click="handleSelect($event)"
                                 name="{{lang}}" id="#{{lang}}" value="{{lang}}" />
-                            <button class="accordion-button" ng-class="{collapsed: lang !== 'English'}" type="button"
+                            <button class="accordion-button collapsed"  type="button"
                                 data-bs-toggle="collapse" data-bs-target="#{{lang}}"
-                                aria-expanded="{{lang === 'English'}}" aria-controls="{{lang}}">
+                                aria-expanded="false" aria-controls="{{lang}}">
                                 <h5>
                                     <span><i class="bi bi-database"></i></span>
                                     <span> {{lang}} Movies </span>
@@ -48,10 +48,10 @@
                             </button>
                         </h2>
                         <div id="{{lang}}" class="accordion-collapse collapse"
-                            ng-class="{show: lang === 'English', collapsed: lang !== 'English'}">
+                            ng-class="{ collapsed: lang !== 'English'}">
                             <div class="accordion-body card-body">
                                 <h5 class="card-title">
-                                    <i class="bi bi-layers-half"></i> Stats
+                                    <i class="bi bi-clipboard-data-fill"></i> Stats
                                 </h5>
                                 <ul class="stats">
                                     <li><span>Budget</span><span> {{stats[0]}}</span></li>
@@ -62,8 +62,55 @@
                         </div>
                     </div>
                 </div>
+                <div class="fields my-3">
+                    <h6>Fields</h6>
+                    <div class="form-check ms-3">
+                        <input class="form-check-input" type="checkbox" value="budget" id="budget"
+                            ng-click="checkFields($event)">
+                        <label class="form-check-label" for="budget">
+                            Budget
+                        </label>
+                    </div>
+                    <div class="form-check ms-3">
+                        <input class="form-check-input" type="checkbox" value="revenue" id="revenue"
+                            ng-click="checkFields($event)">
+                        <label class="form-check-label" for="revenue">
+                            Revenue
+                        </label>
+                    </div>
+                    <div class="form-check ms-3">
+                        <input class="form-check-input" type="checkbox" value="rating" id="rating"
+                            ng-click="checkFields($event)">
+                        <label class="form-check-label" for="rating">
+                            Rating
+                        </label>
+                    </div>
+                </div>
+                <div class="tests mt-3">
+                    <h6>Tests</h6>
+                    <div class="form-check ms-3">
+                        <input class="form-check-input" type="radio" name="flexRadioDefault" ng-model="test"
+                            id="chisquare" value="chisquare">
+                        <label class="form-check-label" for="chisquare">
+                            Chi Square Test
+                        </label>
+                    </div>
+                    <div class="form-check ms-3">
+                        <input class="form-check-input" type="radio" name="flexRadioDefault" ng-model="test" id="anova"
+                            value="anova">
+                        <label class="form-check-label" for="anova">
+                            Analysis of Variance Test
+                        </label>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary mt-3"
+                    ng-disabled="fields.length < 1 || selected.length < 2 || test === ''" ng-click="onCompare($event)" >Compare</button>
             </div>
+
         </div>
+    </div>
+    <div id="stats" ng-controller="statsController">
     </div>
 </body>
 
