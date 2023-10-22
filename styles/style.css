@@ -77,13 +77,33 @@
   gap: 0.75rem;
   z-index: 1;
 }
-.accordion-item:has(input:checked){
+.accordion-item:has(input:checked) {
   border: 1px solid #2563eb;
 }
-#nav-btn{
+#nav-btn {
   width: 45px;
   height: 45px;
   position: fixed;
   top: 2rem;
   right: 3rem;
+}
+#stats {
+  margin-top: 6rem;
+}
+#stats.card {
+  width: fit-content;
+}
+#stats .heading {
+  font-weight: 600;
+  font-size: 1.3rem;
+}
+#stats .row > *[class^="col-"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.diagdiv {
+  background-color: #94a3b8;
+  position: absolute;
+  transform: rotate(45deg);
 }
