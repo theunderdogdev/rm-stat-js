@@ -105,17 +105,6 @@ mainApp.filter("fromMap", function () {
 });
 
 let MOVIE;
-const dont = [
-  "Animation",
-  "Western",
-  "Music",
-  "Thriller",
-  "TV Movie",
-  "War",
-  "Fantasy",
-  "Science Fiction",
-  "History",
-];
 
 mainApp.controller(
   "moviesController",
@@ -132,7 +121,7 @@ mainApp.controller(
       avg_data: null,
       selection: [],
     };
-    $rootScope.constants = { ZCOUNT: 2 };
+    $rootScope.constants = { ZCOUNT: 2, ANOVA: 3 };
     const allMovies = await $http.get("/data/tmdb_movies.json");
     /**
      * @constant
@@ -162,7 +151,7 @@ mainApp.controller(
         fields.add(field);
       });
     });
-
+    console.log(movieCounts);
     $scope.selection = [];
     $scope.test_data = null;
     $scope.avg_data = null;
@@ -182,7 +171,7 @@ mainApp.controller(
       $scope.isEnabled = false;
       if (name === "z_test" && what === "revenue") {
         const langs = Object.keys(movieCounts).filter(
-          (k) => movieCounts[k] >= 100
+          (k) => movieCounts[k] / 2 >= 35
         );
         const revenues = langs.reduce((acc, lang) => {
           acc[lang] = [];
@@ -213,7 +202,7 @@ mainApp.controller(
         });
         console.log(genPop);
         genPop = Object.entries(genPop)
-          .filter(([k, v]) => v.length >= 100)
+          .filter(([k, v]) => v.length / 2 >= 35)
           .reduce((acc, [k, v]) => {
             acc[k] = v;
             return acc;
@@ -267,34 +256,93 @@ mainApp.controller(
           avgAcc[k] = jStat(v).mean();
           return avgAcc;
         }, new Object());
+      } else if (name === "anova" && what === "genre") {
+        let genreRev = {};
+
+        allGenres.forEach((genre) => {
+          genreRev[genre] = { revenue: [], votes: [], popularity: [] };
+          movies.forEach(
+            ({
+              original_language,
+              genres,
+              revenue,
+              vote_average,
+              popularity,
+            }) => {
+              if (
+                original_language === "English" &&
+                genres[0] === genre &&
+                revenue !== undefined &&
+                vote_average !== undefined &&
+                popularity !== undefined
+              ) {
+                genreRev[genre].revenue.push(revenue);
+                genreRev[genre].votes.push(vote_average);
+                genreRev[genre].popularity.push(popularity);
+              }
+            }
+          );
+        });
+        genreRev = Object.keys(genreRev)
+          .filter((g) => genreRev[g].revenue.length > 60)
+          .reduce((_acc, gen) => {
+            _acc[gen] = genreRev[gen];
+            return _acc;
+          }, new Object());
+        console.log(genreRev);
+        $scope.test_data = genreRev;
+        $scope.avg_data = Object.entries(genreRev).reduce((_acc, [k, v]) => {
+          _acc[k] = { revenue: 0, votes: 0, popularity: 0 };
+          _acc[k].revenue = jStat.mean(v.revenue);
+          _acc[k].votes = jStat.mean(v.votes);
+          _acc[k].popularity = jStat.mean(v.popularity);
+          return _acc;
+        }, new Object());
+        console.log($rootScope.test, $scope.test_data, $scope.avg_data);
       }
     });
 
-    $(document).on("click", ".lang-card, .genre-card", function (evt) {
-      const el = $(evt.currentTarget);
-      const attr = el.data("st-lang") || el.data("st-genre");
-      console.log(attr);
-      if (
-        !$scope.selection.includes(attr) &&
-        $scope.selection.length < $rootScope.constants.ZCOUNT
-      ) {
-        el.addClass("selected");
-        $scope.$apply(function () {
-          $scope.selection.push(attr);
-        });
-      } else {
-        el.removeClass("selected");
-        const idx = $scope.selection.indexOf(attr);
-        if (idx !== -1) {
+    $(document).on(
+      "click",
+      ".lang-card, .genre-card, .field-card",
+      function (evt) {
+        const el = $(evt.currentTarget);
+        const attr =
+          el.data("st-lang") || el.data("st-genre") || el.data("st-field");
+        const MAX_SEL =
+          el.hasClass("lang-card") || el.hasClass("genre-card")
+            ? $rootScope.constants.ZCOUNT
+            : $rootScope.constants.ANOVA;
+        console.log(attr);
+        if (
+          !$scope.selection.includes(attr) &&
+          $scope.selection.length < MAX_SEL
+        ) {
+          el.addClass("selected");
           $scope.$apply(function () {
-            $scope.selection.splice(idx, 1);
+            $scope.selection.push(attr);
           });
+        } else {
+          el.removeClass("selected");
+          const idx = $scope.selection.indexOf(attr);
+          if (idx !== -1) {
+            $scope.$apply(function () {
+              $scope.selection.splice(idx, 1);
+            });
+          }
         }
+        $scope.$apply(function () {
+          if ($rootScope.test.name !== "anova") {
+            console.log("nanova");
+            $scope.isEnabled = $scope.selection.length === MAX_SEL;
+          } else {
+            console.log("anova");
+            $scope.isEnabled =
+              $scope.selection.length > 0 && $scope.selection.length <= MAX_SEL;
+          }
+        });
       }
-      $scope.$apply(function () {
-        $scope.isEnabled = $scope.selection.length === 2;
-      });
-    });
+    );
 
     $scope.moveToRoot = function () {
       $rootScope.test.test_data = $scope.test_data;
@@ -351,6 +399,31 @@ mainApp.controller("testController", function ($rootScope, $scope) {
       }, new Object());
       return [sampMeans, sampleVars];
     },
+    anova(selection, test_data) {
+      const samples = Object.keys(test_data).reduce((_acc, genre) => {
+        _acc[genre] = {};
+        selection.forEach((sel) => {
+          const shuffled = shuffle(test_data[genre][sel]);
+          _acc[genre][sel] = shuffled.slice(0, 70);
+        });
+        return _acc;
+      }, new Object());
+      const means = Object.keys(samples).reduce((_acc, genre) => {
+        _acc[genre] = {};
+        selection.forEach((sel) => {
+          _acc[genre][sel] = jStat.mean(samples[genre][sel]);
+        });
+        return _acc;
+      }, new Object());
+      const variances = Object.keys(samples).reduce((_acc, genre) => {
+        _acc[genre] = {};
+        selection.forEach((sel) => {
+          _acc[genre][sel] = jStat.variance(samples[genre][sel]);
+        });
+        return _acc;
+      }, new Object());
+      return [samples, means, variances];
+    },
   };
   $scope._testFns = {
     z_test(sampMeans, popStDev, selection, n1, n2) {
@@ -368,8 +441,88 @@ mainApp.controller("testController", function ($rootScope, $scope) {
           (n2 - 1) * sampleVars[selection[0]]) /
           (n1 + n2 - 2)
       );
-      const t_score = meanDiff / (sampleDev* Math.sqrt(1/n1 + 1/n2))
-      return jStat.ttest(t_score, (n1+n2 - 1), 2)
+      const t_score = meanDiff / (sampleDev * Math.sqrt(1 / n1 + 1 / n2));
+      return jStat.ttest(t_score, n1 + n2 - 1, 2);
+    },
+    anova(selection, samples, means) {
+      if (selection.length === 1) {
+        const k = Object.keys(samples).length;
+        const { n, arr } = Object.keys(samples).reduce(
+          (_acc, genre) => {
+            _acc.arr.push(samples[genre][selection[0]]);
+            _acc.n = _acc.n + samples[genre][selection[0]].length;
+            return _acc;
+          },
+          { n: 0, arr: [] }
+        );
+        const fscore = jStat.anovafscore(arr);
+        return jStat.ftest(fscore, k - 1, n - k);
+      } else {
+        const { n, T, SS } = Object.keys(samples).reduce(
+          (_acc, genre) => {
+            selection.forEach((sel) => {
+              _acc.n = _acc.n + samples[genre][sel].length;
+              _acc.T = _acc.T + jStat.sum(samples[genre][sel]);
+              _acc.SS += jStat.sumsqrd(samples[genre][sel]);
+            });
+            return _acc;
+          },
+          { n: 0, T: 0, SS: 0 }
+        );
+        const cf = Math.pow(T, 2) / n;
+        const TotalSS = SS - cf;
+        const SScol =
+          Object.entries(
+            selection.reduce(
+              (_acc, sel) => {
+                Object.keys(samples).forEach((genre) => {
+                  _acc[sel].total += jStat.sum(samples[genre][sel]);
+                  _acc[sel].n += samples[genre][sel].length;
+                });
+                return _acc;
+              },
+              {
+                votes: { total: 0, n: 0 },
+                popularity: { total: 0, n: 0 },
+                revenue: { total: 0, n: 0 },
+              }
+            )
+          ).reduce((_acc, [k, v]) => {
+            if (v.n !== 0) {
+              console.log("summing", k, n);
+              _acc += Math.pow(v.total, 2) / v.n;
+            }
+            return _acc;
+          }, 0) - cf;
+        const SSrow =
+          Object.entries(
+            Object.keys(samples).reduce((_acc, genre) => {
+              _acc[genre] = { total: 0, n: 0 };
+              selection.forEach((sel) => {
+                _acc[genre].total += jStat.sum(samples[genre][sel]);
+                _acc[genre].n += samples[genre][sel].length;
+              });
+              return _acc;
+            }, new Object())
+          ).reduce((_acc, [k, v]) => {
+            console.log("Row sum", k);
+            _acc += Math.pow(v.total, 2) / v.n;
+            return _acc;
+          }, 0) - cf;
+        const c = selection.length;
+        const r = Object.keys(samples).length;
+        const nsamp = samples[Object.keys(samples)[0]][selection[0]].length;
+        const SSres = TotalSS - (SScol + SSrow);
+        const MScol = SScol / (c - 1);
+        const MSrow = SSrow / (r - 1);
+        const MSres = SSres / ((nsamp - 1) * c * r);
+
+        const colP = jStat.ftest(MScol / MSres, c - 1, (nsamp - 1) * c * r);
+
+        const rowP = jStat.ftest(MSrow / MSres, r - 1, (nsamp - 1) * c * r);
+
+        return [colP, rowP];
+      }
     },
   };
   $scope.hypothesis = function () {
@@ -384,6 +537,18 @@ mainApp.controller("testController", function ($rootScope, $scope) {
       const [sampMeans, sampleVars] = $scope.tables[name](selection, test_data);
       $scope.means = sampMeans;
       $scope.variances = sampleVars;
+    } else if (name === "anova") {
+      const [samples, means, anv_vars] = $scope.tables[name](
+        selection,
+        test_data
+      );
+      console.log(anv_vars);
+      console.log(samples, means);
+      $scope.genre_str = Object.keys(samples).join(", ");
+      $scope.field_str = selection.join(", ");
+      $scope.samples = samples;
+      $scope.means = means;
+      $scope.anv_vars = anv_vars;
     }
     $scope.what = what;
     $scope.name = name;
@@ -393,7 +558,9 @@ mainApp.controller("testController", function ($rootScope, $scope) {
       $scope.pval = $scope._testFns[name](
         $scope.means,
         $scope.stdevs,
-        selection
+        selection,
+        test_data[selection[0]].length,
+        test_data[selection[1]].length
       );
     } else if (name === "t_test") {
       $scope.pval = $scope._testFns[name](
@@ -403,6 +570,14 @@ mainApp.controller("testController", function ($rootScope, $scope) {
         test_data[selection[0]].length,
         test_data[selection[1]].length
       );
+    } else if (name === "anova") {
+      const [col, row] = $scope._testFns[name](
+        selection,
+        $scope.samples,
+        $scope.means
+      );
+      $scope.pval = {col: col, row: row};
+      console.log($scope.pval);
     }
     console.log($scope.pval);
     $scope.tested = true;

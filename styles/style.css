@@ -11,17 +11,19 @@
 }
 .my-container {
   width: 100vw;
-  min-height: 100vh;
+  height: 100vh;
   position: relative;
   padding-top: 4.5rem;
 }
 .row {
   width: 100%;
 }
+.anova-card,
 .lang-card,
 .genre-card {
   cursor: pointer;
 }
+
 .lang-card.selected,
 .lang-card.selected .card-header {
   border-color: #0d6efd;
@@ -30,6 +32,11 @@
 .genre-card.selected .card-header {
   border-color: #0d6efd;
 }
+.field-card.selected,
+.field-card.selected .card-header {
+  border-color: #0d6efd;
+}
+.anova-card:not(:has(.row)),
 .data-card:not(:has(.row)) {
   opacity: 0;
   visibility: hidden;
@@ -53,6 +60,23 @@
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
+}
+.text-capitalize{
+  text-transform: capitalize;
+}
+.my-container #anova_data{
+  height: calc(100vh - 5rem);
+}
+.my-container #anova_data .card-body{
+  height: calc(100% - 60px);
+}
+.my-container #anova_data .card-body .row{
+  height: 100%;
+}
+.my-container #anova_data .card-body .row .col-6:first-child{
+  height: 100%;
+  overflow-y: auto;
+  padding-block-end: 1rem;
 }
 /* @media screen and (max-width: 1160px) {
   .card-header {

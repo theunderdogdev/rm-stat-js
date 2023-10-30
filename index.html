@@ -15,7 +15,48 @@
 </head>
 
 <body>
+    <div class="card shadow test-table mx-3">
+        <div class="card-header fs-5">
+            Anova-Test - <span style="text-transform: capitalize;">{{what}}</span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-6">
+                    <div class="border p-3 rounded">
+                        <h5 class="fw-light mb-3"><i class="bi bi-collection"></i> {{selection[0]}} Movies</h5>
+                        <h6 class="fw-light ms-4">Average Revenue: {{means[selection[0]] | number:1 }}</h6>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="border p-3 rounded position-relative" style="height: 100%;">
+                        <p>
+                            <strong class="text-warning text-decoration-underline">Hypothesis</strong><span
+                                class="text-warning">:</span><br>
+                            <span ng-if="what === 'revenue'">{{selection[0]}} and {{selection[1]}} Movies are
+                                generating same revenue over the world.</span>
+                            <span ng-if="what === 'genre'">{{selection[0]}} and {{selection[1]}} Genres are quite
+                                equally popular.</span>
+                        </p>
+                        <p ng-if="tested">
+                            <strong class="text-warning text-decoration-underline">Result</strong><span
+                                class="text-warning">:</span><br>
+                            <span>T-Score equivalent P-Value: <br> {{ pval }}</span> <br> <br>
+                            <span class="text-danger" ng-if="pval < 0.1">The 'p' value is less than 0.10 hence we
+                                reject the
+                                hypothesis.</span>
+                            <span class="text-success" ng-if="pval >= 0.1">The 'p' value is greater than 0.10 hence
+                                we accept the
+                                hypothesis.</span>
+                        </p>
+                        <button class="test-btn btn btn-outline-primary d-block mt-auto"
+                            ng-click="test()">Test</button>
 
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
 </body>
 
 </html>
