@@ -30,9 +30,9 @@
                             <input type="radio" class="btn-check" name="testName" id="z_test" value="z_test"
                                 ng-model="test.name" autocomplete="off">
                             <label class="btn btn-outline-primary" for="z_test">Z-Test</label>
-                            <input type="radio" class="btn-check" name="testName" id="ttest" value="ttest"
+                            <input type="radio" class="btn-check" name="testName" id="t_test" value="t_test"
                                 ng-model="test.name" autocomplete="off">
-                            <label class="btn btn-outline-primary" for="ttest">T-Test</label>
+                            <label class="btn btn-outline-primary" for="t_test">T-Test</label>
                             <input type="radio" class="btn-check" name="testName" id="anova" value="anova"
                                 ng-model="test.name" autocomplete="off">
                             <label class="btn btn-outline-primary" for="anova">Anova Test</label>
@@ -48,8 +48,18 @@
                                     ng-model="test.what" autocomplete="off">
                                 <label class="btn btn-outline-primary" for="genre">Compare Genre Popularity</label>
                             </div>
+                            <div class="list" ng-switch-when="t_test">
+                                <h4 class="mt-3">Available Tests</h4>
+                                <input type="radio" class="btn-check" name="what" id="revenue" value="revenue"
+                                    ng-model="test.what" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="revenue">Compare Revenue by
+                                    Languages</label>
+                                <input type="radio" class="btn-check" name="what" id="genre" value="genre"
+                                    ng-model="test.what" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="genre">Compare Genre Popularity</label>
+                            </div>
                         </div>
-                        <div class="data-card mt-4 p-1" id="what" ng-switch="test.what">
+                        <div class="data-card mt-4 p-1" id="what" ng-if="test.what !== ''" ng-switch="test.what">
                             <div class="row" ng-switch-when="revenue">
                                 <h4 class="title">Revenues</h4>
                                 <div for="lang" class="col-3" ng-repeat="(lang, revenue) in avg_data">
@@ -75,7 +85,7 @@
                                         </div>
                                         <div class="card-body">
                                             <h6 class="card-title">Popularity</h6>
-                                            <h6 class="card-title fw-light"> {{popul}}</h6>
+                                            <h6 class="card-title fw-light"> {{popul | number:2}}</h6>
                                         </div>
                                     </div>
                                 </div>
@@ -93,7 +103,8 @@
         </div>
     </div>
     <div class="my-container" ng-controller="testController" ng-if="mode === 'test'">
-        <button class="btn btn-outline-primary" id="fhyp-btn" ng-click="hypothesis()">Create Sample and Formulate Hypothesis</button>
+        <button class="btn btn-outline-primary" id="fhyp-btn" ng-click="hypothesis()">Create Sample and Formulate
+            Hypothesis</button>
         <div class="card shadow test-table mx-3" ng-if="name === 'z_test'">
             <div class="card-header fs-5">
                 Z-Test - <span style="text-transform: capitalize;">{{what}}</span>
@@ -124,14 +135,65 @@
                             </p>
                             <p ng-if="tested">
                                 <strong class="text-warning text-decoration-underline">Result</strong><span
-                                class="text-warning">:</span><br>
-                                <span>Z-Score equivalent P-Value {{pval | number:3 }}</span> <br>
-                                <span class="text-danger" ng-if="pval < 0.05">The 'p' value is less than 0.05 hence we reject the
+                                    class="text-warning">:</span><br>
+                                <span>Z-Score equivalent P-Value <br> {{ pval }}</span> <br> <br>
+                                <span class="text-danger" ng-if="pval < 0.05">The 'p' value is less than 0.05 hence we
+                                    reject the
                                     hypothesis.</span>
-                                <span class="text-success" ng-if="pval >= 0.05">The 'p' value is greater than 0.05 hence we accept the
+                                <span class="text-success" ng-if="pval >= 0.05">The 'p' value is greater than 0.05 hence
+                                    we accept the
                                     hypothesis.</span>
                             </p>
-                            <button class="test-btn btn btn-outline-primary d-block mt-auto" ng-click="test()">Test</button>
+                            <button class="test-btn btn btn-outline-primary d-block mt-auto"
+                                ng-click="test()">Test</button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="card shadow test-table mx-3" ng-if="name === 't_test'">
+            <div class="card-header fs-5">
+                T-Test - <span style="text-transform: capitalize;">{{what}}</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="border p-3 rounded">
+                            <h5 class="fw-light mb-3"><i class="bi bi-collection"></i> {{selection[0]}} Movies</h5>
+                            <h6 class="fw-light ms-4">Average: {{means[selection[0]] | number:1 }}</h6>
+                            <h6 class="fw-light ms-4">Variance: {{variances[selection[0]] | number:1}} </h6>
+                        </div>
+                        <div class="border p-3 rounded mt-4">
+                            <h5 class="fw-light mb-3"><i class="bi bi-collection"></i> {{selection[1]}} Movies</h5>
+                            <h6 class="fw-light ms-4">Average: {{means[selection[1]] | number:1}}</h6>
+                            <h6 class="fw-light ms-4">Variance: {{variances[selection[1]] | number:1}}</h6>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border p-3 rounded position-relative" style="height: 100%;">
+                            <p>
+                                <strong class="text-warning text-decoration-underline">Hypothesis</strong><span
+                                    class="text-warning">:</span><br>
+                                <span ng-if="what === 'revenue'">{{selection[0]}} and {{selection[1]}} Movies are
+                                    generating same revenue over the world.</span>
+                                <span ng-if="what === 'genre'">{{selection[0]}} and {{selection[1]}} Genres are quite
+                                    equally popular.</span>
+                            </p>
+                            <p ng-if="tested">
+                                <strong class="text-warning text-decoration-underline">Result</strong><span
+                                    class="text-warning">:</span><br>
+                                <span>T-Score equivalent P-Value <br> {{ pval }}</span> <br> <br>
+                                <span class="text-danger" ng-if="pval < 0.1">The 'p' value is less than 0.10 hence we
+                                    reject the
+                                    hypothesis.</span>
+                                <span class="text-success" ng-if="pval >= 0.1">The 'p' value is greater than 0.10 hence
+                                    we accept the
+                                    hypothesis.</span>
+                            </p>
+                            <button class="test-btn btn btn-outline-primary d-block mt-auto"
+                                ng-click="test()">Test</button>
 
                         </div>
                     </div>

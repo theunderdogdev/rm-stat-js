@@ -9,7 +9,7 @@
 #app {
   width: 100%;
 }
-.my-container{
+.my-container {
   width: 100vw;
   min-height: 100vh;
   position: relative;
@@ -38,19 +38,28 @@
   row-gap: 1rem;
 }
 
-.test-btn{
+.test-btn {
   position: absolute;
   bottom: 0.5rem;
   right: 0.5rem;
 }
-.text-danger{
+.text-danger {
   color: #e11d48 !important;
 }
-.text-success{
+.text-success {
   color: #34d399 !important;
 }
-#fhyp-btn{
+#fhyp-btn {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
 }
+/* @media screen and (max-width: 1160px) {
+  .card-header {
+    height: 42px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+} */

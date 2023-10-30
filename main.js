@@ -167,8 +167,17 @@ mainApp.controller(
     $scope.test_data = null;
     $scope.avg_data = null;
     $scope.isEnabled = false;
+    $rootScope.$watch("test.name", function () {
+      $rootScope.test.what = "";
+      $scope.test_data = null;
+      $scope.avg_data = null;
+      $scope.selection = [];
+      $scope.isEnabled = false;
+      console.log("Reset");
+    });
     $rootScope.$watch("test.what", function () {
       const { name, what } = $rootScope.test;
+      console.log(name, what);
       $scope.selection = [];
       $scope.isEnabled = false;
       if (name === "z_test" && what === "revenue") {
@@ -192,8 +201,7 @@ mainApp.controller(
           },
           new Object()
         );
-      }
-      if (name === "z_test" && what === "genre") {
+      } else if (name === "z_test" && what === "genre") {
         let genPop = {};
         allGenres.forEach((genre) => {
           genPop[genre] = [];
@@ -206,6 +214,50 @@ mainApp.controller(
         console.log(genPop);
         genPop = Object.entries(genPop)
           .filter(([k, v]) => v.length >= 100)
+          .reduce((acc, [k, v]) => {
+            acc[k] = v;
+            return acc;
+          }, new Object());
+        $scope.test_data = genPop;
+        $scope.avg_data = Object.entries(genPop).reduce((avgAcc, [k, v]) => {
+          avgAcc[k] = jStat(v).mean();
+          return avgAcc;
+        }, new Object());
+      } else if (name === "t_test" && what === "revenue") {
+        console.log(movieCounts);
+        const langs = Object.keys(movieCounts).filter(
+          (k) => movieCounts[k] <= 70 && movieCounts[k] / 2 >= 10
+        );
+        const revenues = langs.reduce((acc, lang) => {
+          acc[lang] = [];
+          movies.forEach(({ original_language, revenue }) => {
+            if (original_language === lang && revenue !== undefined) {
+              acc[lang].push(revenue);
+            }
+          });
+          return acc;
+        }, new Object());
+        $scope.test_data = revenues;
+        $scope.avg_data = Object.entries(revenues).reduce(
+          (avgAcc, [lang, revenue]) => {
+            avgAcc[lang] = jStat(revenue).mean();
+            return avgAcc;
+          },
+          new Object()
+        );
+      } else if (name === "t_test" && what === "genre") {
+        let genPop = {};
+        allGenres.forEach((genre) => {
+          genPop[genre] = [];
+          movies.forEach(({ genres, popularity }) => {
+            if (genres && genres[0] === genre && popularity !== undefined) {
+              genPop[genre].push(popularity);
+            }
+          });
+        });
+        console.log(genPop);
+        genPop = Object.entries(genPop)
+          .filter(([k, v]) => v.length <= 70 && v.length >= 15)
           .reduce((acc, [k, v]) => {
             acc[k] = v;
             return acc;
@@ -259,7 +311,7 @@ mainApp.controller("testController", function ($rootScope, $scope) {
    * @type {{ test_data: Object, avg_data: Object, what: string, name: string, selection: string[] }}
    */
   const { test_data, avg_data, what, name, selection } = $rootScope.test;
-
+  console.log(test_data);
   $scope.selection = selection;
   $scope.tested = false;
   $scope.tables = {
@@ -281,31 +333,79 @@ mainApp.controller("testController", function ($rootScope, $scope) {
       }, new Object());
       return [sampMeans, stdDevs];
     },
+    t_test(selection, test_data) {
+      const samples = selection.reduce((_acc, sel) => {
+        const _newArr = shuffle(test_data[sel]);
+        _acc[sel] = _newArr.slice(0, Math.round(_newArr.length / 2));
+        return _acc;
+      }, {});
+      const sampMeans = selection.reduce((_acc, sel) => {
+        _acc[sel] = jStat(samples[sel]).mean();
+        return _acc;
+      }, new Object());
+      $scope.means = [sampMeans[selection[0]], sampMeans[selection[1]]];
+
+      const sampleVars = selection.reduce((_acc, sel) => {
+        _acc[sel] = jStat(samples[sel]).variance(true);
+        return _acc;
+      }, new Object());
+      return [sampMeans, sampleVars];
+    },
   };
   $scope._testFns = {
-    z_test(sampMeans, popStDev, selection) {
+    z_test(sampMeans, popStDev, selection, n1, n2) {
       const meanDiff = sampMeans[selection[0]] - sampMeans[selection[1]];
       const popVariance =
-        Math.pow(popStDev[selection[0]], 2) / test_data[selection[0]].length +
-        Math.pow(popStDev[selection[1]], 2) / test_data[selection[1]].length;
+        Math.pow(popStDev[selection[0]], 2) / n1 +
+        Math.pow(popStDev[selection[1]], 2) / n2;
       const z_score = meanDiff / Math.sqrt(popVariance);
       return jStat.ztest(z_score, 2);
     },
+    t_test(sampMeans, sampleVars, selection, n1, n2) {
+      const meanDiff = sampMeans[selection[0]] - sampMeans[selection[1]];
+      const sampleDev = Math.sqrt(
+        ((n1 - 1) * sampleVars[selection[0]] +
+          (n2 - 1) * sampleVars[selection[0]]) /
+          (n1 + n2 - 2)
+      );
+      const t_score = meanDiff / (sampleDev* Math.sqrt(1/n1 + 1/n2))
+      return jStat.ttest(t_score, (n1+n2 - 1), 2)
+    },
   };
   $scope.hypothesis = function () {
-    if($scope.tested){
+    if ($scope.tested) {
       return;
     }
-    const [sampMeans, popStDev] = $scope.tables[name](selection, test_data);
-    $scope.means = sampMeans;
-    $scope.stdevs = popStDev;
+    if (name === "z_test") {
+      const [sampMeans, popStDev] = $scope.tables[name](selection, test_data);
+      $scope.means = sampMeans;
+      $scope.stdevs = popStDev;
+    } else if (name === "t_test") {
+      const [sampMeans, sampleVars] = $scope.tables[name](selection, test_data);
+      $scope.means = sampMeans;
+      $scope.variances = sampleVars;
+    }
     $scope.what = what;
     $scope.name = name;
   };
   $scope.test = function () {
-    $scope.pval = $scope._testFns[name]($scope.means, $scope.stdevs, selection);
-    console.log($scope.pval)
-    $scope.tested = true
+    if (name === "z_test") {
+      $scope.pval = $scope._testFns[name](
+        $scope.means,
+        $scope.stdevs,
+        selection
+      );
+    } else if (name === "t_test") {
+      $scope.pval = $scope._testFns[name](
+        $scope.means,
+        $scope.variances,
+        selection,
+        test_data[selection[0]].length,
+        test_data[selection[1]].length
+      );
+    }
+    console.log($scope.pval);
+    $scope.tested = true;
   };
 });
 // "genres":\s?"(\w+)"
