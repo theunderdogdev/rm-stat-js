@@ -9,101 +9,48 @@
 #app {
   width: 100%;
 }
-
-#app.row .card {
+.my-container{
+  width: 100vw;
+  min-height: 100vh;
+  position: relative;
+  padding-top: 4.5rem;
+}
+.row {
+  width: 100%;
+}
+.lang-card,
+.genre-card {
   cursor: pointer;
 }
-.stats {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  list-style-type: none;
-  padding-left: 30px;
+.lang-card.selected,
+.lang-card.selected .card-header {
+  border-color: #0d6efd;
 }
-.stats::before {
-  content: "";
-  width: 1px;
-  height: calc(100% - 17px);
-  background-color: #94a3b8;
-  position: absolute;
-  left: 10px;
+.genre-card.selected,
+.genre-card.selected .card-header {
+  border-color: #0d6efd;
 }
-.stats li {
-  width: fit-content;
-  position: relative;
+.data-card:not(:has(.row)) {
+  opacity: 0;
+  visibility: hidden;
 }
-.stats li::before {
-  content: "";
-  width: 1.25rem;
-  height: 1px;
-  background-color: #94a3b8;
-  position: absolute;
-  left: 0px;
-  top: 50%;
-  transform: translate(-100%, -50%);
+.data-card .row {
+  row-gap: 1rem;
 }
 
-.stats li > span {
-  padding: 5px;
-  width: fit-content;
-}
-.stats li > span:first-child {
-  display: inline-block;
-}
-.accordion-header {
-  position: relative;
-}
-.accordion-header .accordion-button {
-  padding-left: 2.7rem;
-}
-.accordion .form-check-input {
-  width: 1.25rem;
-  height: 1.25rem;
-  margin: 0px;
+.test-btn{
   position: absolute;
-  z-index: 3;
-  border-radius: 0.25rem;
-  top: 50%;
-  left: 0.7rem;
-  transform: translate(0rem, -50%);
+  bottom: 0.5rem;
+  right: 0.5rem;
 }
-
-.accordion h5 {
-  margin-top: 0rem;
-  margin-bottom: 0rem;
+.text-danger{
+  color: #e11d48 !important;
 }
-.offcanvas .accordion-button {
-  align-items: center;
-  gap: 0.75rem;
-  z-index: 1;
+.text-success{
+  color: #34d399 !important;
 }
-.accordion-item:has(input:checked) {
-  border: 1px solid #2563eb;
-}
-#nav-btn {
-  width: 45px;
-  height: 45px;
-  position: fixed;
-  top: 2rem;
-  right: 3rem;
-}
-#stats {
-  margin-top: 6rem;
-}
-#stats.card {
-  width: fit-content;
-}
-#stats .heading {
-  font-weight: 600;
-  font-size: 1.3rem;
-}
-#stats .row > *[class^="col-"] {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.diagdiv {
-  background-color: #94a3b8;
+#fhyp-btn{
   position: absolute;
-  transform: rotate(45deg);
+  top: 0.5rem;
+  right: 0.5rem;
 }
