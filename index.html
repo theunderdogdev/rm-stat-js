@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark" ng-app="moviesApp">
+<html lang="en" ng-app="moviesApp" data-bs-theme="dark">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="./lib/angular.min.js"></script>
+    <script src="./lib/angular-resource.min.js"></script>
     <script src="./lib/jstat.min.js"></script>
     <script src="./lib/jquery.min.js"></script>
     <script src="./lib/bootstrap.bundle.min.js"></script>
@@ -15,47 +16,334 @@
 </head>
 
 <body>
-    <div class="card shadow test-table mx-3">
-        <div class="card-header fs-5">
-            Anova-Test - <span style="text-transform: capitalize;">{{what}}</span>
+    <button class="btn btn-outline-primary rounded-circle" ng-class="{'show-info': test.name !== ''}"
+        ng-disabled="test.name === ''" id="test-info" type="button" data-bs-toggle="offcanvas"
+        data-bs-target="#test_information" aria-controls="test_information">
+        <i class="bi bi-body-text"></i>
+    </button>
+    <div class="offcanvas offcanvas-end" data-bs-backdrop="false" tabindex="-1" id="test_information"
+        aria-labelledby="staticBackdropLabel" ng-controller="moviesController">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title" id="staticBackdropLabel">Test -
+                <span ng-if="test.name === 'z_test'">Z-Test</span>
+                <span ng-if="test.name === 'anova'">Anova</span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-6">
-                    <div class="border p-3 rounded">
-                        <h5 class="fw-light mb-3"><i class="bi bi-collection"></i> {{selection[0]}} Movies</h5>
-                        <h6 class="fw-light ms-4">Average Revenue: {{means[selection[0]] | number:1 }}</h6>
+        <div class="offcanvas-body" ng-switch="test.name">
+            <div id="anova-theory" ng-switch-when="anova">
+                <h5 class="hl hl-emerald">What is anova?</h5>
+                <ul class="fw-light">
+                    <li>Statistical technique to test difference.</li>
+                    <li>Tests differences between the means of 3 or more independent groups.</li>
+                    <li>Types - 1 way, 2 way.</li>
+                    <li>Test Statistic - F-Test.</li>
+                </ul>
+                <h5 class="hl hl-yellow mt-4">One Way Anova</h5>
+                <ul class="fw-light type">
+                    <li>A one-way ANOVA is a statistical test used to determine the effect of one independent
+                        variable
+                        on
+                        multiple groups or classes</li>
+                    <li>Simple example would be comparison of Income w.r.t Education Level (Bachelors, Masters,
+                        Doctoral).
+                    </li>
+                </ul>
+                <h5 class="hl hl-yellow mt-4">Two Way Anova</h5>
+                <ul class="fw-light type">
+                    <li>A two-way ANOVA is a statistical test used to determine the effect of two independent
+                        variables
+                        on a
+                        continuous outcome variable.</li>
+                    <li>Simple example would be influence of multiple detergents in Cold, Warm, Hot water.</li>
+                </ul>
+            </div>
+            <div id="z-theory" ng-switch-when="z_test">
+                <h5 class="hl hl-yellow">What is z-test?</h5>
+                <ul class="fw-light">
+                    <li>Statistical test to examine if the sample mean is different from population mean.</li>
+                    <li>Standard Deviation should be provided.</li>
+                    <li>Types - 1 Sampled, 2 Sampled</li>
+                    <li>Test Statistic - z-test</li>
+                </ul>
+                <h5 class="hl hl-emerald mt-4">One Sampled Z-Test</h5>
+                <ul class="fw-light type">
+                    <li>One sample z-test, tests if the sample mean is different from the population mean</li>
+                    <li>Example: Effect of vaccination on the anger level of pets whether the anger level is
+                        different
+                        from the original population.</li>
+                </ul>
+                <h5 class="hl hl-emerald mt-4">Two Sampled Z-Test</h5>
+                <ul class="fw-light type">
+                    <li>Two sampled z-test, tests if the sample means of two independent categories are different.
+                    </li>
+                    <li>Example: Testing whether there is a significant difference in IQ levels of individuals in
+                        two
+                        different cities.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div ng-controller="moviesController" class="modal fade" data-bs-backdrop="false" id="data-test" tabindex="-1"
+        aria-labelledby="selection" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="selection">Data Selection</h1>
+                </div>
+                <div class="modal-body">
+                    <div id="tests" ng-switch="test.name">
+                        <h5 class="hl hl-blue mb-3">Select a test</h5>
+                        <div id="test-types">
+                            <input type="radio" class="btn-check" name="testName" id="z_test" value="z_test"
+                                ng-model="test.name" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="z_test">Z-Test</label>
+                            <input type="radio" class="btn-check" name="testName" id="anova" value="anova"
+                                ng-model="test.name" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="anova">Anova Test</label>
+                        </div>
+                        <div id="test-list" class="mt-4">
+                            <div class="list" ng-switch-when="z_test">
+                                <h5 class="hl hl-blue mt-5 mb-3">Available Tests</h5>
+                                <input type="radio" class="btn-check" name="what" id="revenue" value="revenue"
+                                    ng-model="test.what" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="revenue">Compare Revenue by
+                                    Languages</label>
+                                <input type="radio" class="btn-check" name="what" id="genre" value="genre"
+                                    ng-model="test.what" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="genre">Compare Genre Popularity</label>
+                            </div>
+                            <div class="list" ng-switch-when="t_test">
+                                <h5 class="hl hl-blue mt-5 mb-3">Available Tests</h5>
+                                <input type="radio" class="btn-check" name="what" id="revenue" value="revenue"
+                                    ng-model="test.what" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="revenue">Compare Revenue by
+                                    Languages</label>
+                                <input type="radio" class="btn-check" name="what" id="genre" value="genre"
+                                    ng-model="test.what" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="genre">Compare Genre Popularity</label>
+                            </div>
+                            <div class="list" ng-switch-when="anova">
+                                <h5 class="hl hl-blue mt-5 mb-3">Available Tests</h5>
+                                <input type="radio" class="btn-check" name="what" id="revenue" value="genre"
+                                    ng-model="test.what" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="revenue">Compare Movie Genres</label>
+
+                            </div>
+                        </div>
+                        <div class="data-card mt-4 p-1" id="what" ng-if="test.what !== '' && test.name !== 'anova'"
+                            ng-switch="test.what">
+                            <h5 class="hl hl-blue mb-3">
+                                <span ng-if="test.what === 'revenue'">Revenue</span>
+                                <span ng-if="test.what === 'popularity'">Popularity</span>
+                            </h5>
+                            <div class="row" ng-switch-when="revenue">
+                                <div for="lang" class="col-3" ng-repeat="(lang, revenue) in avg_data">
+                                    <div class="card lang-card" data-st-lang="{{lang}}">
+                                        <div class="card-header">
+                                            {{lang}} Movies
+                                        </div>
+                                        <div class="card-body">
+                                            <h6 class="card-title">Avgerage Revenue</h6>
+                                            <h6 class="card-title fw-light"> {{revenue | currency}}</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <h6 class="mt-4 mb-0">Selected {{selection.length}}/{{constants.ZCOUNT}}
+                                </h6>
+                            </div>
+                            <div class="row" ng-switch-when="genre">
+                                <div for="lang" class="col-3" ng-repeat="(genre, popul) in avg_data">
+                                    <div class="card genre-card" data-st-genre="{{genre}}">
+                                        <div class="card-header">
+                                            {{genre}} Movies
+                                        </div>
+                                        <div class="card-body">
+                                            <h6 class="card-title">Popularity</h6>
+                                            <h6 class="card-title fw-light"> {{popul | number:2}}</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <h6 class="mt-4 mb-0">Selected {{ selection.length}}/{{constants.ZCOUNT}}
+                                </h6>
+                            </div>
+                        </div>
+                        <div class="anova-card mt-4 p-1" id="anova_what" ng-if="test.name === 'anova'"
+                            ng-switch="test.what">
+                            <h5 class="hl hl-blue mb-3 d-block">Fields</h5>
+                            <div class="row" ng-switch-when="genre">
+                                <div class="col-3">
+                                    <div class="card field-card" data-st-field="revenue">
+                                        <div class="card-header">
+                                            Revenue
+                                        </div>
+                                        <div class="card-body">
+                                            Compare based on revenue
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="card field-card" data-st-field="popularity">
+                                        <div class="card-header">
+                                            Popularity
+                                        </div>
+                                        <div class="card-body">
+                                            Compare based on Popularity
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="card field-card" data-st-field="votes">
+                                        <div class="card-header">
+                                            Votes
+                                        </div>
+                                        <div class="card-body">
+                                            Compare based on Votes
+                                        </div>
+                                    </div>
+                                </div>
+                                <h6 class="mt-4 mb-0">Selected {{selection.length}}/3
+                                </h6>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-6">
-                    <div class="border p-3 rounded position-relative" style="height: 100%;">
-                        <p>
-                            <strong class="text-warning text-decoration-underline">Hypothesis</strong><span
-                                class="text-warning">:</span><br>
-                            <span ng-if="what === 'revenue'">{{selection[0]}} and {{selection[1]}} Movies are
-                                generating same revenue over the world.</span>
-                            <span ng-if="what === 'genre'">{{selection[0]}} and {{selection[1]}} Genres are quite
-                                equally popular.</span>
-                        </p>
-                        <p ng-if="tested">
-                            <strong class="text-warning text-decoration-underline">Result</strong><span
-                                class="text-warning">:</span><br>
-                            <span>T-Score equivalent P-Value: <br> {{ pval }}</span> <br> <br>
-                            <span class="text-danger" ng-if="pval < 0.1">The 'p' value is less than 0.10 hence we
-                                reject the
-                                hypothesis.</span>
-                            <span class="text-success" ng-if="pval >= 0.1">The 'p' value is greater than 0.10 hence
-                                we accept the
-                                hypothesis.</span>
-                        </p>
-                        <button class="test-btn btn btn-outline-primary d-block mt-auto"
-                            ng-click="test()">Test</button>
-
-                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" ng-disabled="!isEnabled" ng-click="moveToRoot()">Save
+                        changes</button>
                 </div>
             </div>
         </div>
+    </div>
+    <div class="my-container" ng-controller="testController" ng-if="mode === 'test'">
+        <button class="btn btn-outline-primary" id="fhyp-btn" ng-click="hypothesis()">Create Sample and Formulate
+            Hypothesis</button>
+        <div class="card shadow test-table mx-3" ng-if="name === 'z_test'">
+            <div class="card-header fs-5">
+                Z-Test - <span style="text-transform: capitalize;">{{what}}</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="border p-3 rounded">
+                            <h5 class="fw-light mb-3"><i class="bi bi-collection"></i> {{selection[0]}} Movies</h5>
+                            <h6 class="fw-light ms-4">Average: {{means[selection[0]] | number:1 }}</h6>
+                            <h6 class="fw-light ms-4">Deviation: {{stdevs[selection[0]] | number:1}} </h6>
+                        </div>
+                        <div class="border p-3 rounded mt-4">
+                            <h5 class="fw-light mb-3"><i class="bi bi-collection"></i> {{selection[1]}} Movies</h5>
+                            <h6 class="fw-light ms-4">Average: {{means[selection[1]] | number:1}}</h6>
+                            <h6 class="fw-light ms-4">Deviation: {{stdevs[selection[1]] | number:1}}</h6>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border p-3 rounded position-relative" style="height: 100%;">
+                            <p>
+                                <strong class="text-warning text-decoration-underline">Hypothesis</strong><span
+                                    class="text-warning">:</span><br>
+                                <span ng-if="what === 'revenue'">{{selection[0]}} and {{selection[1]}} Movies are
+                                    generating same revenue over the world.</span>
+                                <span ng-if="what === 'genre'">{{selection[0]}} and {{selection[1]}} Genres are quite
+                                    equally popular.</span>
+                            </p>
+                            <p ng-if="tested">
+                                <strong class="text-warning text-decoration-underline">Result</strong><span
+                                    class="text-warning">:</span><br>
+                                <span>Z-Score equivalent P-Value: <br> {{ pval }}</span> <br> <br>
+                                <span class="text-danger" ng-if="pval < 0.05">The 'p' value is less than 0.05 hence we
+                                    reject the
+                                    hypothesis.</span>
+                                <span class="text-success" ng-if="pval >= 0.05">The 'p' value is greater than 0.05 hence
+                                    we accept the
+                                    hypothesis.</span>
+                            </p>
+                            <button class="test-btn btn btn-outline-primary d-block mt-auto"
+                                ng-click="test()">Test</button>
 
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="card shadow test-table mx-3" ng-if="name === 'anova'" id="anova_data">
+            <div class="card-header fs-5">
+                Anova-Test - <span style="text-transform: capitalize;">{{what}}</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="border p-3 rounded my-2" ng-repeat="(genre, mean_fields) in means">
+                            <h5 class="fw-light mb-3"><i class="bi bi-collection"></i> {{genre}} Movies</h5>
+                            <h6 class="fw-light ms-4">Average</h6>
+                            <h6 class="fw-light ms-5 text-capitalize" ng-repeat="(field, mean) in mean_fields">
+                                {{field}} - {{mean | number:1}}</h6>
+                        </div>
+                    </div>
+                    <div class="col-6 py-2">
+                        <div class="border p-3 rounded position-relative" style="height: 100%;">
+                            <p ng-if="selection.length === 1">
+                                <strong class="text-warning text-decoration-underline">Hypothesis</strong><span
+                                    class="text-warning">:</span><br>
+                                <span>On an average all {{genre_str}} genres have similar {{field_str}}.</span>
+                            </p>
+                            <p ng-if="selection.length > 1">
+                                <strong class="text-warning text-decoration-underline">Hypothesis 1</strong><span
+                                    class="text-warning">:</span><br>
+                                <span>On an average all {{genre_str}} genres are similar.</span>
+                            </p>
+                            <p ng-if="selection.length > 1">
+                                <strong class="text-warning text-decoration-underline">Hypothesis 2</strong><span
+                                    class="text-warning">:</span><br>
+                                <span>On an average {{field_str}} across genres tend to be same.</span>
+                            </p>
+                            <p ng-if="tested && selection.length === 1">
+                                <strong class="text-warning text-decoration-underline">Result Col</strong><span
+                                    class="text-warning">:</span><br>
+                                <span>F-Score equivalent P-Value: <br> {{ pval }}</span> <br> <br>
+                                <span class="text-danger" ng-if="pval < 0.05">The 'p' value is less than 0.05 hence
+                                    we
+                                    reject the
+                                    hypothesis.</span>
+                                <span class="text-success" ng-if="pval >= 0.05">The 'p' value is greater than 0.05
+                                    hence
+                                    we accept the
+                                    hypothesis.</span>
+                            </p>
+                            <p ng-if="tested && selection.length > 1">
+                                <strong class="text-warning text-decoration-underline">Result Col</strong><span
+                                    class="text-warning">:</span><br>
+                                <span>F-Score equivalent P-Value: <br> {{ pval.col }}</span> <br> <br>
+                                <span class="text-danger" ng-if="pval.col < 0.05">The 'p' value is less than 0.05 hence
+                                    we
+                                    reject the
+                                    hypothesis.</span>
+                                <span class="text-success" ng-if="pval.col >= 0.05">The 'p' value is greater than 0.05
+                                    hence
+                                    we accept the
+                                    hypothesis.</span>
+                            </p>
+                            <p ng-if="tested && selection.length > 1">
+                                <strong class="text-warning text-decoration-underline">Result Row</strong><span
+                                    class="text-warning">:</span><br>
+                                <span>F-Score equivalent P-Value: <br> {{ pval.row }}</span> <br> <br>
+                                <span class="text-danger" ng-if="pval.row < 0.05">The 'p' value is less than 0.05 hence
+                                    we
+                                    reject the
+                                    hypothesis.</span>
+                                <span class="text-success" ng-if="pval.row >= 0.05">The 'p' value is greater than 0.05
+                                    hence
+                                    we accept the
+                                    hypothesis.</span>
+                            </p>
+                            <button class="test-btn btn btn-outline-primary d-block mt-auto"
+                                ng-click="test()">Test</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 </body>
 

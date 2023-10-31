@@ -49,41 +49,7 @@
 const toFixed = (number, precision) => {
   return parseFloat(number.toFixed(precision));
 };
-/**
- *
- * @param {Array<any>} data
- * @returns {Map<string, DataSet}
- */
-const toDataSet = function (data) {
-  return data.reduce((movies, movie) => {
-    if (!movies.has(movie.original_language)) {
-      if (
-        movie.budget === undefined ||
-        movie.revenue === undefined ||
-        movie.vote_average === undefined
-      ) {
-        return movies;
-      }
-      movies.set(movie.original_language, {
-        budget: [movie.budget],
-        revenue: [movie.revenue],
-        vote: [movie.vote_average],
-      });
-    } else {
-      if (
-        movie.budget === undefined ||
-        movie.revenue === undefined ||
-        movie.vote_average === undefined
-      ) {
-        return movies;
-      }
-      movies.get(movie.original_language).budget.push(movie.budget);
-      movies.get(movie.original_language).revenue.push(movie.revenue);
-      movies.get(movie.original_language).vote.push(movie.vote_average);
-    }
-    return movies;
-  }, new Map());
-};
+
 /**
  *
  * @param {Array<any>} _arr
@@ -95,7 +61,7 @@ const shuffle = function (_arr) {
 };
 
 console.log("Hello");
-let mainApp = angular.module("moviesApp", []);
+let mainApp = angular.module("moviesApp", ['ngResource']);
 mainApp.filter("fromMap", function () {
   return function (input) {
     var out = {};
@@ -103,6 +69,11 @@ mainApp.filter("fromMap", function () {
     return out;
   };
 });
+mainApp.filter("trust", ['$sce', function($sce) {
+  return function(htmlCode){
+    return $sce.trustAsHtml(htmlCode);
+  }
+}]);
 
 let MOVIE;
 
@@ -203,50 +174,6 @@ mainApp.controller(
         console.log(genPop);
         genPop = Object.entries(genPop)
           .filter(([k, v]) => v.length / 2 >= 35)
-          .reduce((acc, [k, v]) => {
-            acc[k] = v;
-            return acc;
-          }, new Object());
-        $scope.test_data = genPop;
-        $scope.avg_data = Object.entries(genPop).reduce((avgAcc, [k, v]) => {
-          avgAcc[k] = jStat(v).mean();
-          return avgAcc;
-        }, new Object());
-      } else if (name === "t_test" && what === "revenue") {
-        console.log(movieCounts);
-        const langs = Object.keys(movieCounts).filter(
-          (k) => movieCounts[k] <= 70 && movieCounts[k] / 2 >= 10
-        );
-        const revenues = langs.reduce((acc, lang) => {
-          acc[lang] = [];
-          movies.forEach(({ original_language, revenue }) => {
-            if (original_language === lang && revenue !== undefined) {
-              acc[lang].push(revenue);
-            }
-          });
-          return acc;
-        }, new Object());
-        $scope.test_data = revenues;
-        $scope.avg_data = Object.entries(revenues).reduce(
-          (avgAcc, [lang, revenue]) => {
-            avgAcc[lang] = jStat(revenue).mean();
-            return avgAcc;
-          },
-          new Object()
-        );
-      } else if (name === "t_test" && what === "genre") {
-        let genPop = {};
-        allGenres.forEach((genre) => {
-          genPop[genre] = [];
-          movies.forEach(({ genres, popularity }) => {
-            if (genres && genres[0] === genre && popularity !== undefined) {
-              genPop[genre].push(popularity);
-            }
-          });
-        });
-        console.log(genPop);
-        genPop = Object.entries(genPop)
-          .filter(([k, v]) => v.length <= 70 && v.length >= 15)
           .reduce((acc, [k, v]) => {
             acc[k] = v;
             return acc;
@@ -381,24 +308,6 @@ mainApp.controller("testController", function ($rootScope, $scope) {
       }, new Object());
       return [sampMeans, stdDevs];
     },
-    t_test(selection, test_data) {
-      const samples = selection.reduce((_acc, sel) => {
-        const _newArr = shuffle(test_data[sel]);
-        _acc[sel] = _newArr.slice(0, Math.round(_newArr.length / 2));
-        return _acc;
-      }, {});
-      const sampMeans = selection.reduce((_acc, sel) => {
-        _acc[sel] = jStat(samples[sel]).mean();
-        return _acc;
-      }, new Object());
-      $scope.means = [sampMeans[selection[0]], sampMeans[selection[1]]];
-
-      const sampleVars = selection.reduce((_acc, sel) => {
-        _acc[sel] = jStat(samples[sel]).variance(true);
-        return _acc;
-      }, new Object());
-      return [sampMeans, sampleVars];
-    },
     anova(selection, test_data) {
       const samples = Object.keys(test_data).reduce((_acc, genre) => {
         _acc[genre] = {};
@@ -434,17 +343,7 @@ mainApp.controller("testController", function ($rootScope, $scope) {
       const z_score = meanDiff / Math.sqrt(popVariance);
       return jStat.ztest(z_score, 2);
     },
-    t_test(sampMeans, sampleVars, selection, n1, n2) {
-      const meanDiff = sampMeans[selection[0]] - sampMeans[selection[1]];
-      const sampleDev = Math.sqrt(
-        ((n1 - 1) * sampleVars[selection[0]] +
-          (n2 - 1) * sampleVars[selection[0]]) /
-          (n1 + n2 - 2)
-      );
-      const t_score = meanDiff / (sampleDev * Math.sqrt(1 / n1 + 1 / n2));
-      return jStat.ttest(t_score, n1 + n2 - 1, 2);
-    },
-    anova(selection, samples, means) {
+    anova(selection, samples) {
       if (selection.length === 1) {
         const k = Object.keys(samples).length;
         const { n, arr } = Object.keys(samples).reduce(
@@ -526,17 +425,11 @@ mainApp.controller("testController", function ($rootScope, $scope) {
     },
   };
   $scope.hypothesis = function () {
-    if ($scope.tested) {
-      return;
-    }
+
     if (name === "z_test") {
       const [sampMeans, popStDev] = $scope.tables[name](selection, test_data);
       $scope.means = sampMeans;
       $scope.stdevs = popStDev;
-    } else if (name === "t_test") {
-      const [sampMeans, sampleVars] = $scope.tables[name](selection, test_data);
-      $scope.means = sampMeans;
-      $scope.variances = sampleVars;
     } else if (name === "anova") {
       const [samples, means, anv_vars] = $scope.tables[name](
         selection,
@@ -562,21 +455,19 @@ mainApp.controller("testController", function ($rootScope, $scope) {
         test_data[selection[0]].length,
         test_data[selection[1]].length
       );
-    } else if (name === "t_test") {
-      $scope.pval = $scope._testFns[name](
-        $scope.means,
-        $scope.variances,
-        selection,
-        test_data[selection[0]].length,
-        test_data[selection[1]].length
-      );
     } else if (name === "anova") {
-      const [col, row] = $scope._testFns[name](
-        selection,
-        $scope.samples,
-        $scope.means
-      );
-      $scope.pval = {col: col, row: row};
+      if(selection.length > 1){
+        const [col, row] = $scope._testFns[name](
+          selection,
+          $scope.samples,
+        );
+        $scope.pval = {col: col, row: row};
+      }else{
+        $scope.pval = $scope._testFns[name](
+          selection,
+          $scope.samples,
+        );
+      }
       console.log($scope.pval);
     }
     console.log($scope.pval);

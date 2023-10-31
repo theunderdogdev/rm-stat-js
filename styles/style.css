@@ -78,12 +78,52 @@
   overflow-y: auto;
   padding-block-end: 1rem;
 }
-/* @media screen and (max-width: 1160px) {
-  .card-header {
-    height: 42px;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
-  }
-} */
+.offcanvas{
+  z-index: 5;
+  width: 100vw !important;
+}
+.hl{
+  width: fit-content;
+  font-weight: 400;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+}
+.hl-emerald{
+  color: #34d399;
+  background-color: #34d39933;
+}
+.hl-blue{
+  color: #38bdf8;
+  background-color: #38bdf833;
+}
+.hl-yellow{
+  color: #facc15;
+  background-color: #facc1533;
+}
+.modal{
+  z-index: 3;
+}
+
+.offcanvas-body ul{
+  list-style-type: " - ";
+}
+.offcanvas-body ul li{
+  margin-bottom: 0.35rem;
+}
+.offcanvas-body ul.type li:first-child{
+  list-style-type: disc;
+}
+#test-info{
+  width: 45px;
+  height: 45px;
+  z-index: 4;
+  position: fixed;
+  top: 3.5rem;
+  right: 1.5rem;
+  transform: translateX(5rem);
+  transition: transform 0.5s cubic-bezier(0.68,-0.55,0.27,1.55);;
+}
+#test-info.show-info{
+  transform: translateX(0rem);
+  
+}
